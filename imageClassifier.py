@@ -1,7 +1,7 @@
 import input_data
 #downloads dataset, splits and formats it.
 
-mnist = input_data.read_data_sets("/Users/Ajesh/Desktop/UNH/Courses/Project1/dataset/", one_hot=True)
+mnist = input_data.read_data_sets("/Users/Ajesh/Desktop/UNH/Courses/Project5/dataset/", one_hot=True)
 import tensorflow as tf
 
 #learning rate determines how fast to update weights, if value is >, it skips optimal solution, value is <, might need many iterations.
@@ -50,7 +50,7 @@ merged_summary_op = tf.merge_all_summaries()
 
 with tf.Session() as sess:
     sess.run(init)
-    summary_writer = tf.train.SummaryWriter('/Users/Ajesh/Desktop/UNH/Courses/PProject/logs', graph_def=sess.graph_def)
+    summary_writer = tf.train.SummaryWriter('/Users/Ajesh/Desktop/UNH/Courses/Project5/logs', graph_def=sess.graph_def)
 
 #model training.
     for iteration in range(training_iteration):
