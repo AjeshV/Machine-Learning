@@ -1,0 +1,225 @@
+---
+title: "Predictive Modelling"
+output:
+  html_notebook: default
+  word_document: default
+  pdf_document: default
+---
+
+Using the ISLR College dataset:
+```{r}
+library(ISLR)
+```
+
+```{r}
+data(College)
+```
+
+```{r}
+set.seed(200)
+```
+
+Splitting the dataset into train and test data:
+```{r}
+train = sample(1:dim(College)[1], dim(College)[1] / 2)
+```
+
+```{r}
+test <- -train
+```
+
+```{r}
+trainset.college <- College[train, ]
+```
+
+```{r}
+testset.college <- College[test, ]
+```
+
+Fitting linear model:
+```{r}
+fit1.lm <- lm(Apps ~ ., data = trainset.college)
+```
+
+```{r}
+predict.lm <- predict(fit1.lm, testset.college)
+```
+
+```{r}
+mean((predict.lm - testset.college$Apps)^2)
+```
+Test error is 1108531.
+
+Fitting a ridge regression model:
+```{r}
+matrix_train <- model.matrix(Apps ~ ., data = trainset.college)
+```
+
+```{r}
+matrix_test <- model.matrix(Apps ~ ., data = testset.college)
+```
+
+```{r}
+grid <- 10 ^ seq(4, -2, length = 100)
+```
+
+```{r}
+library(glmnet)
+```
+
+```{r error=TRUE}
+ridgern_fit <- glmnet(matrix_training, trainset.college$Apps, alpha = 0, lambda = grid, thresh = 1e-12)
+```
+
+```{r error=TRUE}
+ridgern_cv <- cv.glmnet(matrix_training, trainset.college$Apps, alpha = 0, lambda = grid, thresh = 1e-12)
+```
+
+```{r error=TRUE}
+ridgern_betterlambda <- ridgern_cv$lambda.min
+```
+
+```{r error=TRUE}
+ridgern_betterlambda
+```
+
+```{r error=TRUE}
+predict.ridgern <- predict(ridgern_fit, s = ridgern_betterlambda, newx = matrix_test)
+```
+
+```{r error=TRUE}
+mean((predict.ridgern - testset.college$Apps)^2)
+```
+The test error obtained is 1108512.
+
+Fitting a lasso model:
+```{r error=TRUE}
+lassoml_fit <- glmnet(matrix_training, trainset.college$Apps, alpha = 1, lambda = grid, thresh = 1e-12)
+```
+
+```{r error=TRUE}
+lassoml_cv <- cv.glmnet(matrix_training, trainset.college$Apps, alpha = 1, lambda = grid, thresh = 1e-12)
+```
+
+```{r error=TRUE}
+lasso_betterlambda <- lassoml_cv$lambda.min
+```
+
+```{r error=TRUE}
+lasso_betterlambda
+```
+
+```{r error=TRUE}
+predict.lassoml <- predict(lassoml_fit, s = lasso_betterlambda, newx = matrix_test)
+```
+
+```{r error=TRUE}
+mean((predict.lassoml - testset.college$Apps)^2)
+```
+The test error obtained is 1059141.
+
+Number of non-zero coefficient estimate:
+```{r error=TRUE}
+predict(lassoml_fit, s = lasso_betterlambda, type = "coefficients")
+```
+
+To predict number of college applications, test data can be used, average them and compute $R^2$.
+```{r error=TRUE}
+avrge.test <- mean(testset.college$Apps)
+```
+
+```{r error=TRUE}
+r2of_lm <- 1 - mean((predict.lm - testset.college$Apps)^2) / mean((avrge.test - testset.college$Apps)^2)
+```
+
+```{r error=TRUE}
+r2of_lm
+```
+
+```{r error=TRUE}
+r2of_ridgern <- 1 - mean((predict.ridgern - testset.college$Apps)^2) / mean((avrge.test - testset.college$Apps)^2)
+```
+
+```{r error=TRUE}
+r2of_ridgern
+```
+
+```{r error=TRUE}
+r2of_lassoml <- 1 - mean((predict.lassoml - testset.college$Apps)^2) / mean((avrge.test - testset.college$Apps)^2)
+```
+
+```{r error=TRUE}
+r2of_lassoml
+```
+
+From the results obtained, Test $R^2$ for least squares is 0.9010682, for ridge regression it is 0.90107 and for lasso model the value is, 0.9054761. The models above predicts applications with high accuracy and there is no much difference among the test errors resulting from these approaches.
+
+$$
+ISL Equation 5.6, \alpha = \frac{\sigma_Y^2 - \sigma_{XY}}{\sigma_X^2 + \sigma_Y^2 - 2\sigma_{XY}}.
+$$
+
+$$
+i) Variance, \mathrm{Var}(\alpha X + (1 - \alpha) Y) can be expanded as,
+$$
+
+$$
+\alpha^2\sigma_X^2 + (1 - \alpha)^2\sigma_Y^2 + 2\alpha(1 - \alpha)\sigma_{XY}.
+$$
+
+$$
+ii) And by taking 1st derivative of, \mathrm{Var}(\alpha X + (1 - \alpha) Y)
+$$
+$$
+relatively to \alpha value, we arrive at, 
+$$
+
+$$
+\frac{\partial}{\partial\alpha}\mathrm{Var}(\alpha X + (1 - \alpha) Y) = 
+$$
+
+$$
+2\alpha\sigma_X^2 - 2\sigma_Y^2 + 2\alpha\sigma_Y^2 + 2\sigma_{XY} - 
+$$
+
+$$
+4\alpha\sigma_{XY}. iii) On equating derivative given at (ii) to zero,
+$$
+
+$$
+2\alpha\sigma_X^2 - 2\sigma_Y^2 + 2\alpha\sigma_Y^2 + 2\sigma_{XY} - 
+4\alpha\sigma_{XY} = 0, 
+$$
+
+$$
+iv) Using equation 5.6, \alpha = \frac{\sigma_Y^2 - 
+\sigma_{XY}}{\sigma_X^2 + \sigma_Y^2 - 2\sigma_{XY}} 
+$$
+
+$$
+it can showed that it is 
+$$
+
+$$
+the least value, it can be used to show that , by taking 2nd derivative, 
+$$
+
+$$
+\frac{\partial^2}{\partial\alpha^2}\mathrm{Var}(\alpha X + (1 - \alpha) Y) = 
+$$
+
+$$
+2\sigma_X^2 + 2\sigma_Y^2 - 4\sigma_{XY} = 2\mathrm{Var}(X - Y) is only greater 
+$$
+
+$$
+than or equal to zero. Hence using the 2nd derivative it can be proved that, 
+$$
+
+$$
+\alpha provided in equation 5.6 does minimize variance \mathrm{Var}(\alpha X + 
+$$
+
+
+$$
+(1 - \alpha) Y).
+$$
